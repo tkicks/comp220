@@ -1,0 +1,40 @@
+# =========================================================================
+#
+# Problem 1
+#
+# =========================================================================
+#            .data
+#instring:   .asciiz     "Enter integer: "   # text to print to prompt user for int
+#endline:    .asciiz     "\n"                # endline char
+#
+#            .text
+#            .globl main
+#
+#main:
+#            li          $v0, 4              # syscall for printing string
+#            la          $a0, instring       # load instring text into register a0
+#            syscall                         # run print instring to console
+#
+#            li          $v0, 5              # syscall for reading in an int
+#            syscall                         # run reading in an int
+#
+#            add         $a0, $zero, $v0     # move input to $a0 by adding zero to it
+#            li          $v0, 1              # syscall for printing int
+#            syscall                         # run print input to console
+#
+#            li          $v0, 4              # syscall for printing string
+#            la          $a0, endline        # load endline char to register to print
+#            syscall                         # run print endline char to console
+#
+#            li          $v0, 10             # syscall to halt
+#            syscall                         # run halt
+
+
+
+# =========================================================================
+#
+# Problem 2
+#
+# =========================================================================
+            .data
+instring:   .asciiz     "Enter integer: "    # text to print when prompting for int
