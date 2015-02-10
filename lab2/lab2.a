@@ -38,10 +38,77 @@
 # =========================================================================
             .data
 instring:   .asciiz     "Enter integer: "    # text to print when prompting for int
+average:    .asciiz     "Average: "          # text to print before displaying avg of inputs
+remain:     .asciiz     "Remainder: "        # text to print before displaying remainder
 endline:    .asciiz     "\n"                 # endline char
+divby:      .word       3                    # divide by 3 to find the average
 
             .text
             .globl main
 
 main:
+        # ==========================================================================
+        # First int input
+            li          $v0, 4              # syscall for printing string
+            la          $a0, instring       # load instring text into register a0
+            syscall                         # run print instring to console
+
+            li          $v0, 5              # syscall for reading in an int
+            syscall                         # run reading in an int
+
+            add         $a1, $zero, $v0     # move input to $a0 by adding zero to it
+        # ==========================================================================
+        # Second int input
+            li          $v0, 4              # syscall for printing string
+            la          $a0, instring       # load instring text into register a0
+            syscall                         # run print instring to console
+
+            li          $v0, 5              # syscall for reading in an int
+            syscall                         # run reading in an int
+
+            add         $a1, $a1, $v0       # update $a1 by adding new input to it
+        # ===========================================================================
+        # Third int input
+            li          $v0, 4              # syscall for printing string
+            la          $a0, instring       # load instring text into register a0
+            syscall                         # run print instring to console
+
+            li          $v0, 5              # syscall for reading in an int
+            syscall                         # run reading in an int
+
+            add         $a0, $a1, $v0       # update $a1 by adding new input to it
+        # ===========================================================================
+        # Find average and remainder (avg mflo, rem mfhi)
+            la          $t0, divby          # load divby into a temp var
+            div         $a0, $t0            # divide $a1 by 3 to get avg
             
+        # ============================================================================
+        # Print average/remainder
+            li          $v0, 4              # syscall for printing string
+            la          $a0, average        # load average text into $a0
+            syscall                         # run print average to console
+
+            li          $v0, 1              # syscall for printing int
+            mflo        $a0                 # move value (avg) from lo storage to $a0
+            syscall                         # run print int
+
+            li          $v0, 4              # syscall for printing string
+            la          $a0, endline        # load endline char to register to print
+            syscall                         # run print endline char to console
+
+            li          $v0, 4              # syscall for printing string
+            la          $a0, remain         # load remain text into $a0
+            syscall                         # run print remain to console
+
+            li          $v0, 1              # syscall for printing int
+            mfhi        $a0                 # move value (remain) from hi storage to $a0
+            syscall                         # run print int to console
+        # ==============================================================================
+        # Print endline and close
+
+            li          $v0, 4              # syscall for printing string
+            la          $a0, endline        # load endline char to register to print
+            syscall                         # run print endline char to console
+
+            li          $v0, 10             # syscall to halt
+            syscall                         # run halt
