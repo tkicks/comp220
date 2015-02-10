@@ -38,3 +38,10 @@
 # =========================================================================
             .data
 instring:   .asciiz     "Enter integer: "    # text to print when prompting for int
+endline:    .asciiz     "\n"                 # endline char
+
+            .text
+            .globl main
+
+main:
+            
