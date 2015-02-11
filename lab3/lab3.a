@@ -1,0 +1,39 @@
+# lab3.a
+# Tyler Kickham
+# Purpose: TBD
+# Input: Integer
+# Output: Integer
+# -------------------------------------------------------------------------
+            .data
+intArray:   .word   11 59 2 97 -4 -66 -45 22 19 -34
+endl:       .asciiz "\n"
+# -------------------------------------------------------------------------
+            .text
+            .globl main
+main:
+        # display the ints=================================================
+        # init temp registers ------------------------------------------
+            li  $t0, 0              # load $t0 with counter value 0
+            li  $t1, 10             # store the number 10 in the list
+            li  $t2, 1              # holds 1 to increase counter
+        # --------------------------------------------------------------
+loop:
+            beq $t1, $t2, done      # break when counter = items in array
+            li  $v0, 1              # syscall to print int
+            lw  $a0, intArray($t0)  # load int into $a0
+            syscall                 # run print int
+            add $t0, $t0, 4         # progress 4 bits in memory
+            add $t2, $t2, 1         # adds one to the counter
+
+            li  $v0, 4              # syscall to print string
+            la  $a0, endl           # load endl char to $a0
+            syscall
+            j   loop                # loop around again
+
+
+
+
+        # halt=============================================================
+done:
+            li $v0, 10
+            syscall             #halt
