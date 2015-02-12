@@ -6,6 +6,8 @@
 # -------------------------------------------------------------------------
             .data
 intArray:   .word   11 59 2 97 -4 -66 -45 22 19 -34
+posArray:   .word   0 0 0 0 0 0 0 0 0 0
+negArray:   .word   0 0 0 0 0 0 0 0 0 0
 endl:       .asciiz "\n"
 # -------------------------------------------------------------------------
             .text
@@ -15,10 +17,14 @@ main:
         # init temp registers ------------------------------------------
             li  $t0, 0              # load $t0 with counter value 0
             li  $t1, 10             # store the number 10 in the list
-            li  $t2, 1              # holds 1 to increase counter
+            li  $t2, 0              # holds 1 to increase counter
+            li  $t4, 0              # posArray index
+            li  $t5, 0              # negArray index
         # --------------------------------------------------------------
+# ======================================================================
+# 3.2 ==================================================================
 loop:
-            beq $t1, $t2, done      # break when counter = items in array
+            beq $t1, $t2, resetO    # break when counter = items in array
             li  $v0, 1              # syscall to print int
             lw  $a0, intArray($t0)  # load int into $a0
             syscall                 # run print int
@@ -29,10 +35,77 @@ loop:
             la  $a0, endl           # load endl char to $a0
             syscall
             j   loop                # loop around again
+        # --------------------------------------------------------------
 
+# ======================================================================
+# 3.3 ==================================================================
+resetO:
+        # reset values --------------------------------------
+            sub $t0, $t0, $t0       # reset array index to 0
+            sub $t2, $t2, $t2       # reset counter to 1
+            j   negfirst            # jump to negfirst
+        # ---------------------------------------------------
+negfirst:
+            beq $t1, $t2, resetI    # break when counter = items in array
+            lw  $a0, intArray($t0)  # load int into $a0
+        # check if item is negative
+            slt $t3, $a0, $zero     # see if current item is less than 0
+            beq $t3, $zero, pos     # if number is positive break to pos
+            bne $t3, $zero, negt    # if number is negative break to neg
+pos:
+            sw  $a0, posArray($t4)  # store number in next spot of posArray
+            add $t4, $t4, 4         # move array index down 4 bits
+            add $t0, $t0, 4         # progress 4 bits in mem to next index
+            add $t2, $t2, 1         # add one to counter
+            j negfirst              # loop
+negt:
+            sw  $a0, negArray($t5)  # store number in next spot of negArray
+            add $t5, $t5, 4         # move array index down 4 bits
+            add $t0, $t0, 4         # progress 4 bits in mem to next index
+            add $t2, $t2, 1         # add one to counter
+            j negfirst              # loop
+resetI:
+        # space out different parts --------------------------
+            li  $v0, 4              # syscall to print string
+            la  $a0, endl           # load endl char to $a0
+            syscall
+            li  $v0, 4              # syscall to print string
+            la  $a0, endl           # load endl char to $a0
+            syscall
+        # ----------------------------------------------------
+            sub $t0, $t0, $t0       # reset array index to 0
+            j   donenegs            # jump to donenegs
+resetII:
+            sub $t0, $t0, $t0       # reset array index to 0
+            j   donepos             # jump to donepos
+resetIII:
+            sub $t0, $t0, $t0       # reset array index to 0
+            j   makecents           # jump to makecents
+donenegs:
+            lw  $a0, negArray($t0)  # take first word from negArray
+            beq $a0, $zero, resetII # break to resetII when negArray {}
+            li  $v0, 1              # syscall to print number
+            syscall
+            add $t0, $t0, 4         # move down 4 bits in memory
+            li  $v0, 4              # syscall to print string
+            la  $a0, endl           # load endl char to $a0
+            syscall
+            j donenegs              # loop
+donepos:
+            lw  $a0, posArray($t0)  # take first word from negArray
+            beq $a0, $zero, resetIII# break to resetII when negArray {}
+            li  $v0, 1              # syscall to print number
+            syscall
+            add $t0, $t0, 4         # move down 4 bits in memory
+            li  $v0, 4              # syscall to print string
+            la  $a0, endl           # load endl char to $a0
+            syscall
+            j donepos               # loop
 
-
-
+# ======================================================================
+# 3.4 ==================================================================
+makecents:
+            #slt
         # halt=============================================================
 done:
             li $v0, 10
