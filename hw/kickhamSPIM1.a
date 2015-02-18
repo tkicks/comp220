@@ -40,6 +40,8 @@ inputs:
             li      $v0, 5                      # receive int input
             syscall
 
+            blt     $v0, 0, setupMean           # break if input < 0
+
             sw      $v0, intArray($t1)          # store input in array
 
             add     $t1, $t1, 4                 # move down a space in memory
@@ -53,7 +55,7 @@ setupMean:
     # set up temp registers to find the mean
             li      $t1, 0                      # array index
             li      $t2, 0                      # holds added value, then mean after all additions
-            move    $t0, $t4                    # preserve original count
+            move    $t4, $t0                    # preserve original count
             j       doMeanAdd
 
 # -----------------------------------------------------------
@@ -64,7 +66,7 @@ doMeanAdd:
 
             lw      $t3, intArray($t1)          # load current value into $t3
             add     $t2, $t2, $t3               # add the value to the other values
-            sub     $t3, $t3, 1                 # subtract one from the counter
+            sub     $t4, $t4, 1                 # subtract one from the counter
             add     $t1, $t1, 4                 # move down to next spot in array
 
             j       doMeanAdd
@@ -72,16 +74,40 @@ doMeanAdd:
 
 # -----------------------------------------------------------
 doMeanDiv:
+    # divide after all additions to find the mean and display it
             li      $v0, 4                      #
             la      $a0, meanText               # display "Mean: "
             syscall                             #
 
             div     $t2, $t0                    # divide the sum by the counter (num items)
-            mflo    $a0                         # move the mean into $t2
+            mflo    $a0                         # move the mean into $a0
 
             li      $v0, 1                      # print the mean (at syscall)
             syscall
-            
+
+            move    $t2, $a0                    # store the mean in $t2
+
+            j       varDiv
+# -----------------------------------------------------------
+
+# -----------------------------------------------------------
+varDiv:
+    # do the division for the variance
+    # $t2 has mean value
+            li      $t1, 0                      # reset array index to 0
+            li      $t3, 0                      # reset value of array index to 0
+            li      $t4, 0                      # reset item counter to 0
+            li      $t5, 0                      # will hold what to multiply by
+            li      $t6, 1                      # temp to hold 1
+
+            sub     $t5, $t0, 1                 # sub 1 from counter store in $t5
+            div     $t6, $t5                    # div 1 by $t5
+            mflo    $t5                         # store the quotient in $t5
+
+            j       terminator  
+
+
+# -----------------------------------------------------------
 
 # -----------------------------------------------------------
 terminator:
@@ -93,6 +119,7 @@ terminator:
             li      $v0, 4
             la      $a0, endMessage
             syscall
+
     # halt
             li      $v0, 10
             syscall
