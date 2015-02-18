@@ -1,0 +1,54 @@
+# Assignment SPIM 1
+# Tyler Kickham
+# Purpose: TBD
+# Input: Positive integers in range {1,..., 15} ending with negative
+# Output: Integer ean, variance (s^2), mode, frequency graph
+# -------------------------------------------------------------------------
+            .data
+intArray:   .word   0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
+freqArray:  .word   0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
+mean:       .word   0
+variance:   .word   0
+mode:       .word   0
+inMessage:  .asciiz "Enter up to 20 positive ints.\nPress Enter to submit each int.\nEnter a negative to finish: "
+meanText:   .asciiz "Mean: "
+varText:    .asciiz "Variance (s^2): "
+modeText:   .asciiz "Mode: "
+freqText:   .asciiz "Frequency graph:\n"
+endMessage: .asciiz "Program completed and all information displayed.\n"
+endl:       .asciiz "\n"
+# -------------------------------------------------------------------------
+            .text
+            .globl main
+
+main:
+    # prompt for ints --------------------------------------
+            li  $v0, 4
+            la  $a0, inMessage      # put inMessage text
+            syscall
+
+            li  $t0, 0              # input counter
+            li  $t1, 1              # constant to add to counters
+            j   inputs              # go to receiving ints loop
+
+
+inputs:
+    # loop that receives inputs to put into array
+            beq $t0, 15, AFTERINPUT
+
+            li  $v0, 5              # receive int input
+            syscall
+
+            add $t0, $t0, $t1
+            j   inputs
+
+
+AFTERINPUT:
+    # where to go after receiving all input. TODO
+            li  $v0, 4
+            la  $a0, endMessage
+            syscall
+
+    # halt -------------------------------------
+            li  $v0, 10
+            syscall
