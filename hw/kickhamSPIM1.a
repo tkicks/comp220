@@ -86,6 +86,10 @@ doMeanDiv:
             syscall
 
             move    $t2, $a0                    # store the mean in $t2
+            
+            li		$v0, 4
+            la		$a0, endl					# print endline char
+            syscall
 
             j       varDiv
 # -----------------------------------------------------------
@@ -97,17 +101,53 @@ varDiv:
             li      $t1, 0                      # reset array index to 0
             li      $t3, 0                      # reset value of array index to 0
             li      $t4, 0                      # reset item counter to 0
-            li      $t5, 0                      # will hold what to multiply by
+            #li      $t5, 0                      # will hold what to multiply by
             li      $t6, 1                      # temp to hold 1
+            li		$t7, 0						# stores subtraction^2
+			li		$t8, 0						# stores sum of all sub^2
 
-            sub     $t5, $t0, 1                 # sub 1 from counter store in $t5
-            div     $t6, $t5                    # div 1 by $t5
-            mflo    $t5                         # store the quotient in $t5
+            sub     $t5, $t0, $t6               # sub 1 from counter store in $t5
 
-            j       terminator  
-
+            j       sumDiffs
+# -----------------------------------------------------------
 
 # -----------------------------------------------------------
+sumDiffs:
+	# working
+	# finds the sum of the (subtraction of each input from mean)^2
+	# $t5 has div to multiply by (next jump)
+	# registers same as varDiv above
+			beq		$t4, $t0, varMult
+			
+			lw		$t6, intArray($t3)			# store current value in $t6
+			sub		$t7, $t6, $t2				# store current value - mean in $t7
+			mult	$t7, $t7					# square difference
+			mflo	$t7							# store value of ^2 in $t7
+			add		$t8, $t8, $t7				# add it to the current sum
+			
+			add		$t3, $t3, 4					# next array index
+			add		$t4, $t4, 1					# add one to counter
+			
+			j		sumDiffs
+# -----------------------------------------------------------
+
+# -----------------------------------------------------------
+varMult:
+	# multiplies $t5 by the summation
+	# $t5 has div to multiply by
+	# $t8 has summation to multiply by
+	# registers same as sumDiffs above	
+			li		$v0, 4						#
+			la		$a0, varText				# print varText to screen
+			syscall								#
+			
+			li		$v0, 1						# print variance
+			div		$t8, $t5					# divide by n-1 to find the variance
+			mflo	$a0							# retrieve the variance
+			syscall
+			
+			j		terminator
+# -----------------------------------------------------------	
 
 # -----------------------------------------------------------
 terminator:
