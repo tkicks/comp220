@@ -10,7 +10,7 @@ freqArray:  .word   0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
 mean:       .word   0
 variance:   .word   0
 mode:       .word   0
-inMessage:  .asciiz "Enter up to 20 positive ints.\nPress Enter to submit each int.\nEnter a negative to finish: "
+inMessage:  .asciiz "Enter up to 20 positive ints (1-15).\nPress Enter to submit each int.\nEnter a negative to finish: "
 meanText:   .asciiz "Mean: "
 varText:    .asciiz "Variance (s^2): "
 modeText:   .asciiz "Mode: "
@@ -96,12 +96,11 @@ doMeanDiv:
 
 # -----------------------------------------------------------
 varDiv:
-    # do the division for the variance
+    # set up the division for the variance
     # $t2 has mean value
             li      $t1, 0                      # reset array index to 0
             li      $t3, 0                      # reset value of array index to 0
             li      $t4, 0                      # reset item counter to 0
-            #li      $t5, 0                      # will hold what to multiply by
             li      $t6, 1                      # temp to hold 1
             li		$t7, 0						# stores subtraction^2
 			li		$t8, 0						# stores sum of all sub^2
