@@ -54,7 +54,7 @@ inputs:
 setupMean:
     # set up temp registers to find the mean
             li      $t1, 0                      # array index
-            li      $t2, 0                      # holds added value, then mean after all additions
+            li      $t2, 0                      # holds added value, then mean after all pluses
             move    $t4, $t0                    # preserve original count
             j       doMeanAdd
 
@@ -74,7 +74,7 @@ doMeanAdd:
 
 # -----------------------------------------------------------
 doMeanDiv:
-    # divide after all additions to find the mean and display it
+    # divide after all pluses to find the mean and display it
             li      $v0, 4                      #
             la      $a0, meanText               # display "Mean: "
             syscall                             #
@@ -114,7 +114,7 @@ varDiv:
 sumDiffs:
 	# working
 	# finds the sum of the (subtraction of each input from mean)^2
-	# $t5 has div to multiply by (next jump)
+	# $t5 has div to multiply by (next part)
 	# registers same as varDiv above
 			beq		$t4, $t0, varMult
 			
@@ -145,8 +145,69 @@ varMult:
 			mflo	$a0							# retrieve the variance
 			syscall
 			
-			j		terminator
-# -----------------------------------------------------------	
+			j		resetReg
+# -----------------------------------------------------------
+
+# -----------------------------------------------------------
+resetReg:
+    # reset the registers no longer in use to new uses
+    # $t0 - counter, $t1 - offset(intArray)
+            li      $t2, 0                      # hold offset for freqArray
+            li      $t3, 0                      # temp counter to preserve $t0
+            li      $t4, 0                      # hold value of intArray index
+            li      $t5, 0                      # find the right spot of freqArray
+
+            j       countEach
+# -----------------------------------------------------------
+
+# -----------------------------------------------------------
+countEach:
+    # store the count of each number in freqArray
+            beq     $t3, $t0, terminator        # break when the frequencies are all counted
+
+            lw      $t4, intArray($t1)          # hold value of current intArray
+
+            beq     $t4, $t5, addOne
+            add     $t5, 1
+            beq     $t4, $t5, addTwo
+            add     $t5, 1
+            beq     $t4, $t5, addThree
+            add     $t5, 1
+            beq     $t4, $t5, addFour
+            add     $t5, 1
+            beq     $t4, $t5, addFive
+            add     $t5, 1
+            beq     $t4, $t5, addSix
+            add     $t5, 1
+            beq     $t4, $t5, addSeven
+            add     $t5, 1
+            beq     $t4, $t5, addEight
+            add     $t5, 1
+            beq     $t4, $t5, addNine
+            add     $t5, 1
+            beq     $t4, $t5, addTen
+            add     $t5, 1
+            beq     $t4, $t5, addElev
+            add     $t5, 1
+            beq     $t4, $t5, addTwel
+            add     $t5, 1
+            beq     $t4, $t5, addThirt
+            add     $t5, 1
+            beq     $t4, $t5, addFourt
+            add     $t5, 1
+            beq     $t4, $t5, addFift
+# -----------------------------------------------------------
+
+# -----------------------------------------------------------
+# the next fifteen segments will all be the same, but will
+# add one to different indexes in freqArray
+# -----------------------------------------------------------
+addOne:
+            li      $t2, 0                      # freqArray offset is zero for 1
+            lw      $t4, freqArray($t2)         # hold current freqArray index count
+            add     $t4, $t4, 1                 # add one to the count
+            sw      $t4, freqArray($t2)         # store counter in freqArray
+
 
 # -----------------------------------------------------------
 terminator:
