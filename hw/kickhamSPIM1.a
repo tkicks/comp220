@@ -1,8 +1,8 @@
 # Assignment SPIM 1
 # Tyler Kickham
-# Purpose: TBD
-# Input: Positive integers in range {1,..., 15} ending with negative
-# Output: Integer ean, variance (s^2), mode, frequency graph
+# Purpose: Practice loops, conditionals, and arrays in SPIM
+# Input: Positive integers in range {1, ..., 15} ending with negative
+# Output: Integer mean, variance (s^2), mode, frequency graph
 # -------------------------------------------------------------------------
             .data
 intArray:   .word   0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
@@ -14,7 +14,8 @@ inMessage:  .asciiz "Enter up to 20 positive ints (1-15).\nPress Enter to submit
 meanText:   .asciiz "Mean: "
 varText:    .asciiz "Variance (s^2): "
 modeText:   .asciiz "Mode: "
-freqText:   .asciiz "Frequency graph:\n"
+freqText:   .asciiz "Frequency graph:"
+spaceText:  .asciiz " "
 endMessage: .asciiz "Program completed and all information displayed.\n"
 endl:       .asciiz "\n"
 # -------------------------------------------------------------------------
@@ -23,204 +24,317 @@ endl:       .asciiz "\n"
 
 main:
     # prompt for ints
-            li      $v0, 4
-            la      $a0, inMessage              # put inMessage text
+            li          $v0, 4
+            la          $a0, inMessage          # put inMessage text
             syscall
 
-            li      $t0, 0                      # input counter
-            li      $t1, 0                      # array index
-            j       inputs                      # go to receiving ints loop
+            li          $t0, 0                  # input counter
+            li          $t1, 0                  # array index
+            j           inputs                  # go to receiving ints loop
 
 
 # -----------------------------------------------------------
 inputs:
     # loop that receives inputs and stores them in intArray
-            beq     $t0, 15, setupMean
+            beq         $t0, 20, setupMean
 
-            li      $v0, 5                      # receive int input
+            li          $v0, 5                  # receive int input
             syscall
 
-            blt     $v0, 0, setupMean           # break if input < 0
+            blt         $v0, 0, setupMean       # break if input < 0
 
-            sw      $v0, intArray($t1)          # store input in array
+            sw          $v0, intArray($t1)      # store input in array
 
-            add     $t1, $t1, 4                 # move down a space in memory
+            add         $t1, $t1, 4             # move down a space in memory
 
-            add     $t0, $t0, 1                 # add one to counter
-            j       inputs
+            add         $t0, $t0, 1             # add one to counter
+            j           inputs
 # -----------------------------------------------------------
 
 # -----------------------------------------------------------
 setupMean:
     # set up temp registers to find the mean
-            li      $t1, 0                      # array index
-            li      $t2, 0                      # holds added value, then mean after all pluses
-            move    $t4, $t0                    # preserve original count
-            j       doMeanAdd
+            li          $t1, 0                  # array index
+            li          $t2, 0                  # holds added value, then mean after all pluses
+            move        $t4, $t0                # preserve original count
+            j           doMeanAdd
 
 # -----------------------------------------------------------
 doMeanAdd:
     # figure out added value of the inputs
     # $t3 holds the current number
-            beq     $t4, $zero, doMeanDiv       # divide when counter gets back to zero
+            beq         $t4, $zero, doMeanDiv   # divide when counter gets back to zero
 
-            lw      $t3, intArray($t1)          # load current value into $t3
-            add     $t2, $t2, $t3               # add the value to the other values
-            sub     $t4, $t4, 1                 # subtract one from the counter
-            add     $t1, $t1, 4                 # move down to next spot in array
+            lw          $t3, intArray($t1)      # put current value into $t3
+            add         $t2, $t2, $t3           # add the value to the other values
+            sub         $t4, $t4, 1             # subtract one from the counter
+            add         $t1, $t1, 4             # move down to next spot in array
 
-            j       doMeanAdd
+            j           doMeanAdd
 # -----------------------------------------------------------
 
 # -----------------------------------------------------------
 doMeanDiv:
     # divide after all pluses to find the mean and display it
-            li      $v0, 4                      #
-            la      $a0, meanText               # display "Mean: "
+            li          $v0, 4                  #
+            la          $a0, meanText           # display "Mean: "
             syscall                             #
 
-            div     $t2, $t0                    # divide the sum by the counter (num items)
-            mflo    $a0                         # move the mean into $a0
+            div         $t2, $t0                # divide the sum by the counter (num items)
+            mflo        $a0                     # move the mean into $a0
 
-            li      $v0, 1                      # print the mean (at syscall)
+            li          $v0, 1                  # print the mean (at syscall)
             syscall
 
-            move    $t2, $a0                    # store the mean in $t2
+            move        $t2, $a0                # store the mean in $t2
             
-            li		$v0, 4
-            la		$a0, endl					# print endline char
+            li          $v0, 4
+            la          $a0, endl               # print endline char
             syscall
 
-            j       varDiv
+            j           varDiv
 # -----------------------------------------------------------
 
 # -----------------------------------------------------------
 varDiv:
     # set up the division for the variance
     # $t2 has mean value
-            li      $t1, 0                      # reset array index to 0
-            li      $t3, 0                      # reset value of array index to 0
-            li      $t4, 0                      # reset item counter to 0
-            li      $t6, 1                      # temp to hold 1
-            li		$t7, 0						# stores subtraction^2
-			li		$t8, 0						# stores sum of all sub^2
+            li          $t1, 0                  # reset array index to 0
+            li          $t3, 0                  # reset value of array index to 0
+            li          $t4, 0                  # reset item counter to 0
+            li          $t6, 1                  # temp to hold 1
+            li          $t7, 0                  # stores subtraction^2
+            li          $t8, 0                  # stores sum of all sub^2
 
-            sub     $t5, $t0, $t6               # sub 1 from counter store in $t5
+            sub         $t5, $t0, $t6           # sub 1 from counter store in $t5
 
-            j       sumDiffs
+            j           sumDiffs
 # -----------------------------------------------------------
 
 # -----------------------------------------------------------
 sumDiffs:
-	# working
-	# finds the sum of the (subtraction of each input from mean)^2
-	# $t5 has div to multiply by (next part)
-	# registers same as varDiv above
-			beq		$t4, $t0, varMult
-			
-			lw		$t6, intArray($t3)			# store current value in $t6
-			sub		$t7, $t6, $t2				# store current value - mean in $t7
-			mult	$t7, $t7					# square difference
-			mflo	$t7							# store value of ^2 in $t7
-			add		$t8, $t8, $t7				# add it to the current sum
-			
-			add		$t3, $t3, 4					# next array index
-			add		$t4, $t4, 1					# add one to counter
-			
-			j		sumDiffs
+      # working
+      # finds the sum of the (subtraction of each input from mean)^2
+      # $t5 has div to multiply by (next part)
+      # registers same as varDiv above
+            beq         $t4, $t0, varMult
+                 
+            lw          $t6, intArray($t3)      # store current value in $t6
+            sub         $t7, $t6, $t2           # store current value - mean in $t7
+            mult        $t7, $t7                # square difference
+            mflo        $t7                     # store value of ^2 in $t7
+            add         $t8, $t8, $t7           # add it to the current sum
+                  
+            add         $t3, $t3, 4             # next array index
+            add         $t4, $t4, 1             # add one to counter
+                  
+            j           sumDiffs
 # -----------------------------------------------------------
 
 # -----------------------------------------------------------
 varMult:
-	# multiplies $t5 by the summation
-	# $t5 has div to multiply by
-	# $t8 has summation to multiply by
-	# registers same as sumDiffs above	
-			li		$v0, 4						#
-			la		$a0, varText				# print varText to screen
-			syscall								#
-			
-			li		$v0, 1						# print variance
-			div		$t8, $t5					# divide by n-1 to find the variance
-			mflo	$a0							# retrieve the variance
-			syscall
-			
-			j		resetReg
+      # multiplies $t5 by the summation
+      # $t5 has div to multiply by
+      # $t8 has summation to multiply by
+      # registers same as sumDiffs above  
+            li          $v0, 4                  #
+            la          $a0, varText            # print varText to screen
+            syscall                             #
+                  
+            li          $v0, 1                  # print variance
+            div         $t8, $t5                # divide by n-1 to find the variance
+            mflo        $a0                     # retrieve the variance
+            syscall
+
+            li          $v0, 4                  #
+            la          $a0, endl               # print endline char
+            syscall                             #
+                  
+            j           resetReg
 # -----------------------------------------------------------
 
 # -----------------------------------------------------------
 resetReg:
     # reset the registers no longer in use to new uses
     # $t0 - counter, $t1 - offset(intArray)
-            li      $t2, 0                      # hold offset for freqArray
-            li      $t3, 0                      # temp counter to preserve $t0
-            li      $t4, 0                      # hold value of intArray index
-            li      $t5, 0                      # find the right spot of freqArray
+            li          $t1, -4                 # -4 to add to zero for first run through
+            li          $t2, 0                  # hold offset for freqArray
+            li          $t3, 20                 # temp counter to preserve $t0
+            li          $t4, 0                  # hold value of intArray index
+            li          $t5, 1                  # find the right spot of freqArray
+            li          $t6, 0                  # counter
 
-            j       countEach
+            j           countEach
 # -----------------------------------------------------------
 
 # -----------------------------------------------------------
 countEach:
     # store the count of each number in freqArray
-            beq     $t3, $t0, terminator        # break when the frequencies are all counted
+            beq         $t0, $t6, setupGraph    # if it's equal to zero loop
+            add         $t6, $t6, 1             # add 1
 
-            lw      $t4, intArray($t1)          # hold value of current intArray
+            li          $t2, 0                  # reset freqArray offset
+            add         $t1, $t1, 4             # move to next intArray index
 
-            beq     $t4, $t5, addOne
-            add     $t5, 1
-            beq     $t4, $t5, addTwo
-            add     $t5, 1
-            beq     $t4, $t5, addThree
-            add     $t5, 1
-            beq     $t4, $t5, addFour
-            add     $t5, 1
-            beq     $t4, $t5, addFive
-            add     $t5, 1
-            beq     $t4, $t5, addSix
-            add     $t5, 1
-            beq     $t4, $t5, addSeven
-            add     $t5, 1
-            beq     $t4, $t5, addEight
-            add     $t5, 1
-            beq     $t4, $t5, addNine
-            add     $t5, 1
-            beq     $t4, $t5, addTen
-            add     $t5, 1
-            beq     $t4, $t5, addElev
-            add     $t5, 1
-            beq     $t4, $t5, addTwel
-            add     $t5, 1
-            beq     $t4, $t5, addThirt
-            add     $t5, 1
-            beq     $t4, $t5, addFourt
-            add     $t5, 1
-            beq     $t4, $t5, addFift
+            lw          $t4, intArray($t1)      # hold value of current intArray
+
+            beq         $t4, $t5, addArray
+            j           addLoop
 # -----------------------------------------------------------
 
 # -----------------------------------------------------------
-# the next fifteen segments will all be the same, but will
-# add one to different indexes in freqArray
-# -----------------------------------------------------------
-addOne:
-            li      $t2, 0                      # freqArray offset is zero for 1
-            lw      $t4, freqArray($t2)         # hold current freqArray index count
-            add     $t4, $t4, 1                 # add one to the count
-            sw      $t4, freqArray($t2)         # store counter in freqArray
+addLoop:
+    # loop to add one to $t5 to check if it's equal
+            add         $t5, $t5, 1             # add one to $t5
+            beq         $t4, $t5, addArray      # it's the correct number
 
+            j           addLoop
+# -----------------------------------------------------------
+
+# -----------------------------------------------------------
+addArray:
+    # add the number to freqArray
+            li          $t7, 4                  # 1 memory block
+            mult        $t5, $t7                # multiply $t5 by 4
+            mflo        $t2                     # move the product to $t2
+            sub         $t2, $t2, 4             # subtract 4 from $t2 to get the correct offset
+
+            lw          $t4, freqArray($t2)     # hold current freqArray index count
+            add         $t4, $t4, 1             # add one to the count
+            sw          $t4, freqArray($t2)     # store counter in freqArray
+            sub         $t3, $t3, 1             # add one to the counter
+            li          $t5, 1                  # reset $t5 to 1
+
+            j           countEach               # loop back
+# -----------------------------------------------------------
+
+# -----------------------------------------------------------
+setupGraph:
+    # set up temp registers for the frequency graph
+    # $t0 - counter, $t1 - offset freqArray, $t2 - freqArray counter
+            li          $t1, -4                 # start at 0 index when add 4 at beginning
+            li          $t2, 0                  # to start at 0 when add 1 at beginning
+
+            li          $v0, 4                  #
+            la          $a0, freqText           # frequency text
+            syscall                             #
+
+            j           makeGraph
+# -----------------------------------------------------------
+
+# -----------------------------------------------------------
+makeGraph:
+    # make frequency graph
+    # $t0 - counter, $t1 - offset freqArray, $t2 - freqArray counter
+    # $t3 - hold value stored in freqArray
+            add         $t1, $t1, 4             # add four to current memory index
+            add         $t2, $t2, 1             # add one to the current index
+            bgt         $t2, 15, setupMode      # break after all graphed
+
+            lw          $t3, freqArray($t1)     # get value in array
+
+            li          $v0, 4                  #
+            la          $a0, endl               # print endl char
+            syscall                             #
+
+            li          $v0, 1                  #
+            add         $a0, $t2, $zero         # print number in range
+            syscall                             #
+
+            li           $v0, 4                 #
+            la           $a0, spaceText         # print a space
+            syscall                             #
+
+            j            loopGraph
+# -----------------------------------------------------------
+
+# -----------------------------------------------------------
+loopGraph:
+    # make frequency graph
+    # $t3 - hold value stored in freqArray
+            beq         $t3, $zero, makeGraph   # break when there are no more instances
+
+            li          $v0, 1                  #
+            li          $a0, 0                  # print a zero
+            syscall                             #
+
+            sub         $t3, $t3, 1             # minus one from counter
+
+            j           loopGraph
+# -----------------------------------------------------------
+
+# -----------------------------------------------------------
+setupMode:
+    # sets up $ to find mode
+            li          $t0, 15                 # 15 indexes in freqArray
+            li          $t1, 1                  # counter for number values
+            li          $t2, 0                  # freqArray offset
+            li          $t3, 0                  # value in freqArray($t2)
+            li          $t4, 0                  # less than mode value
+            li          $t5, 0                  # number of mode
+            li          $t6, 0                  # mode
+
+            j           findMode
+# -----------------------------------------------------------
+
+# -----------------------------------------------------------
+findMode:
+    # finds the mode
+            beq         $t1, $t0, displayMode   # when all indexes have been checked break
+
+            lw          $t3, freqArray($t2)     # get number of next index
+            slt         $t4, $t3, $t5           # 1 if current index value < number of mode
+
+            beq         $t4, $zero, newMode     # if the new number > current mode
+
+            add         $t2, $t2, 4             # increase offset of freqArray
+            add         $t1, $t1, 1             # continue the loop if there's no new mode
+
+            j           findMode
+# -----------------------------------------------------------
+
+# -----------------------------------------------------------
+newMode:
+    # when there's a new mode change the mode and count to new values
+            add         $t6, $t1, 0             # make the new mode this value
+            lw          $t5, freqArray($t2)     # new number of mode
+
+            add         $t1, $t1, 1             # move on to next number
+            add         $t2, $t2, 4             # move to next index
+
+            j           findMode
+# -----------------------------------------------------------
+
+# -----------------------------------------------------------
+displayMode:
+    # display the mode to user
+            li          $v0, 4                  #
+            la          $a0, endl               # print endline char
+            syscall                             #
+
+            li          $v0, 4                  #
+            la          $a0, modeText           # print modeText
+            syscall                             #
+
+            li          $v0, 1                  #
+            move        $a0, $t6                # print the mode
+            syscall                             #
+
+            j           terminator
+# -----------------------------------------------------------
 
 # -----------------------------------------------------------
 terminator:
     # tell user it's all over
-            li      $v0, 4
-            la      $a0, endl
+            li          $v0, 4
+            la          $a0, endl
             syscall
 
-            li      $v0, 4
-            la      $a0, endMessage
+            li          $v0, 4
+            la          $a0, endMessage
             syscall
 
     # halt
-            li      $v0, 10
+            li          $v0, 10
             syscall
 # -----------------------------------------------------------
