@@ -1,0 +1,80 @@
+# -------------------------------------------------------------------------
+            .data
+array:      .float      1.1 2.2 3.3 4.4 5.5 6.6 7.7 8.8
+valText:    .asciiz     "Value is: "
+addrText:   .asciiz     "Address is: "
+locText:    .asciiz     "Enter loc: "
+endl:       .asciiz     "\n"
+# -------------------------------------------------------------------------
+            .text
+            .globl main
+main:
+            li  $t0, 0              # index in array
+            li  $t1, 0              # loop counter
+            li  $t2, 4              # multiply by
+
+            li  $v0, 4              #
+            la  $a0, valText        # print valText
+            syscall                 #
+
+            li  $v0, 2              #
+            l.s $f12, array($t0)    # print value of array[0]
+            syscall                 #
+
+            li  $v0, 4              #
+            la  $a0, endl           # print newline char
+            syscall                 #
+
+            li  $v0, 4              #
+            la  $a0, addrText       # print addrText
+            syscall                 #
+
+            li  $v0, 1              #
+            la  $a0, array($t0)     # print address of array[0]
+            syscall                 #
+
+            li  $v0, 4              #
+            la  $a0, endl           # print newline char
+            syscall                 #
+
+            li  $v0, 4              #
+            la  $a0, locText        # print locText
+            syscall                 #
+
+            li  $v0, 5              #
+            syscall                 # load in an index
+
+            mult    $v0, $t2        # multiply index to move to right spot in array
+            mflo    $t0             # move into $t0
+
+
+            li  $v0, 4              #
+            la  $a0, endl           # print newline char
+            syscall                 #
+
+            li  $v0, 4              #
+            la  $a0, valText        # print valText
+            syscall                 #
+
+            li  $v0, 2              #
+            l.s $f12, array($t0)    # print value of array[loc]
+            syscall                 #
+
+            li  $v0, 4              #
+            la  $a0, endl           # print newline char
+            syscall                 #
+
+            li  $v0, 4              #
+            la  $a0, addrText       # print addrText
+            syscall                 #
+
+            li  $v0, 1              #
+            la  $a0, array($t0)     # print address of array[loc]
+            syscall                 #
+
+            li  $v0, 4              #
+            la  $a0, endl           # print newline char
+            syscall                 #
+
+            li $v0, 10              #
+            syscall                 # halt

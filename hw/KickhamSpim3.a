@@ -1,0 +1,355 @@
+# Assignment SPIM 3
+# Tyler Kickham
+# Purpose: Reconstruct a tower of disks on a different peg recursively
+# Input: User inputs the number of pegs (n), starting peg, and ending peg through the keyboard
+# Output: Displays the next step required and what step number it is
+# -------------------------------------------------------------------------
+            .data
+askForN:    .asciiz "Enter number of disks: "
+startPeg:   .asciiz "Enter starting peg (1=A, 2=B, 3=C): "
+endPeg:     .asciiz "Enter ending peg (1=A, 2=B, 3=C): "
+letterA:    .asciiz "A"
+letterB:    .asciiz "B"
+letterC:    .asciiz "C"
+moveTo:     .asciiz ": Move "
+to:         .asciiz " to "
+endMessage: .asciiz "Tower reconstructed. Moves performed: "
+endl:       .asciiz "\n"
+# -------------------------------------------------------------------------
+            .text
+            .globl main
+main:
+        # variables described in next function aside from declaration comments
+            addi        $a1, $zero, 0       # start peg at 0 (not entered yet)
+            addi        $a2, $zero, 0       # start peg at 0 (not entered yet)
+            addi        $a3, $zero, 0       # start peg at 0 (not entered yet)
+            addi        $t3, $zero, 1       # hold 1 for when moving pegs around in arguments
+            addi        $t4, $zero, 2       # hold 2 for when moving pegs around in arguments
+            addi        $t5, $zero, 3       # hold 3 for when moving pegs around in arguments
+
+            li          $v0, 4              #
+            la          $a0, askForN        # ask for number of disks
+            syscall                         #
+
+            li          $v0, 5              #
+            syscall                         # read in number of disks (n)
+
+            addi        $s1, $v0, 0         # temp hold n
+
+            li          $v0, 4              #
+            la          $a0, startPeg       # ask for start peg
+            syscall                         #
+
+            li          $v0, 5              #
+            syscall                         # get start peg
+
+            beq         $v0, $t3, startA    # starting peg is A
+            beq         $v0, $t4, startB    # starting peg is B
+            beq         $v0, $t5, startC    # starting peg is C
+startA:
+            addi        $a1, $zero, 1       # starting peg is A
+            j           endingPeg           # figure out which is the ending peg
+startB:
+            addi        $a1, $zero, 2       # starting peg is B
+            j           endingPeg           # figure out which is the ending peg
+startC:
+            addi        $a1, $zero, 3       # starting peg is C
+            j           endingPeg           # figure out which is the ending peg
+
+endingPeg:
+            li          $v0, 4              #
+            la          $a0, endPeg         # ask for end peg
+            syscall                         #
+
+            li          $v0, 5              #
+            syscall                         # get end peg
+
+            beq         $v0, $t3, endA      # ending peg is A
+            beq         $v0, $t4, endB      # ending peg is B
+            beq         $v0, $t5, endC      # ending peg is C
+
+endA:
+            addi        $a2, $zero, 1       # ending peg is A
+            beq         $a1, $t4, midC      # transition peg is C
+            beq         $a1, $t5, midB      # transition peg is B
+            j           terminator          # start and end on A so just end
+endB:
+            addi        $a2, $zero, 2       # ending peg is A
+            beq         $a1, $t3, midC      # transition peg is C
+            beq         $a1, $t5, midA      # transition peg is A
+            j           terminator          # start and end on B so just end
+endC:
+            addi        $a2, $zero, 3       # ending peg is A
+            beq         $a1, $t3, midB      # transition peg is B
+            beq         $a1, $t4, midA      # transition peg is A
+            j           terminator          # start and end on C so just end
+
+midA:
+            addi        $a3, $zero, 1       # transition peg is A
+            j           endMain             # finish with the main function
+midB:
+            addi        $a3, $zero, 2       # transition peg is B
+            j           endMain             # finish with the main function
+midC:
+            addi        $a3, $zero, 3       # transition peg is C
+            j           endMain             # finish with the main function
+
+endMain:
+            addi        $a0, $s1, 0         # move the number of disks to $a0 to pass to moveDisk
+
+            addi        $t1, $zero, 0       # counter
+
+            jal         moveDisk            # start solving tower
+
+            jal         terminator          # halt program
+# -----------------------------------------------------------
+
+# -----------------------------------------------------------
+            .text
+moveDisk:
+    # $a0 = 4, $a1 = 1(A), $a2 = 2(B), $a3 = 3(C), $t1 = counter, $t2/6/7 = temp holders
+    # $t3 = 1, $t4 = 2, $t5 = 3
+    # recursively moves each disk to correct place to reconstruct the tower
+
+            beq         $a0, $zero, return  # end at 0 disks left to move
+
+        # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+        # make storage space for frame by conventions
+            addi        $sp, $sp, -32       # move 32 bytes (size computed)
+            sw          $ra, 0($sp)         # store return address to main
+            sw          $fp, 4($sp)         # store frame pointer from main
+            sw          $a0, 8($sp)         # store n in frame
+            sw          $a1, 12($sp)        # store from peg in frame
+            sw          $a2, 16($sp)        # store transition peg in frame
+            sw          $a3, 20($sp)        # store destination peg in frame   
+            addu        $fp, $sp, 28        # reset frame pointer to current frame
+        # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+            li          $t6, 1              # subtract 1 from n
+            subu        $a0, $a0, $t6       # subtract 1 from n
+
+        # move disks around on pegs ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+            addi        $t2, $a3, 0         # temp hold $a2 in $t2 to preserve value
+            addi        $a3, $a2, 0         # change transition peg to destination peg
+            addi        $a2, $t2, 0         # change destination peg to transition peg
+        # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+            jal         moveDisk            # loop first recursion
+
+        # after return ---------------------------------------------------
+            lw          $ra, 0($sp)         # load return address
+            lw          $fp, 4($sp)         # store frame pointer from last frame
+            lw          $a1, 12($sp)        # load from peg
+            lw          $a2, 16($sp)        # load transition peg
+            lw          $a3, 20($sp)        # load destination peg
+
+            addi        $t1, $t1, 1         # add one to counter
+
+        # start printing out next move ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+            li          $v0, 1              #
+            addi        $a0, $t1, 0         # print counter
+            syscall                         #
+
+            li          $v0, 4              #
+            la          $a0, moveTo         # print beginning move text
+            syscall                         #
+        # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+            lw          $a0, 8($sp)         # load n
+            addi        $sp, $sp, 32        # reset stack location
+
+        # check what the from peg equals ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+            beq         $a1, $t3, Ato       # if the from peg is 1 (A)
+            beq         $a1, $t4, Bto       # if the from peg is 2 (B)
+            beq         $a1, $t5, Cto       # if the from peg is 3 (C)
+        # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+# -----------------------------------------------------------
+
+# -----------------------------------------------------------
+            .text
+moveDisk2:
+        # $a1 = start peg, $a3 = transition peg, $t6/7 = temp for moving around $a1/3 values
+        # restructure arguments before returning to moveDisk so the right disks are moved
+        # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+        # make storage space for frame by conventions
+            addi        $sp, $sp, -32       # move 32 bytes (size computed)
+            sw          $ra, 0($sp)         # store return address to main
+            sw          $fp, 4($sp)         # store frame pointer from main
+            sw          $a0, 8($sp)         # store n in frame
+            sw          $a1, 12($sp)        # store from peg in frame
+            sw          $a2, 16($sp)        # store transition peg in frame
+            sw          $a3, 20($sp)        # store destination peg in frame   
+            addu        $fp, $sp, 28        # reset frame pointer to current frame
+        # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+            addi        $t6, $a1, 0         # temp store from peg
+            addi        $t7, $a3, 0         # temp store transition peg
+            addi        $a1, $a3, 0         # transition peg is now in from peg
+            addi        $a3, $t6, 0         # from peg is now in transition peg
+
+            li          $t6, 1              # temp hold 1 for n-1
+            subu        $a0, $a0, $t6       # n-1
+
+            jal         moveDisk            # jump to first recursion w/ restructured arguments
+
+        # load return address, don't need arguments
+            lw          $ra, 0($sp)         # load return address
+            addi        $sp, $sp, 32        # restore stack pointer
+            jr          $ra                 # return to previous frame
+# -----------------------------------------------------------
+
+# -----------------------------------------------------------
+            .text
+Ato:
+        # moving from peg A to peg... ~~~~~~~~~~~~~~~~~~~~~~~~
+            addi        $t6, $a0, 0         # temp hold n while printing
+
+            li          $v0, 4              #
+            la          $a0, letterA        # print A
+            syscall                         #
+
+            li          $v0, 4              #
+            la          $a0, to             # print to
+            syscall                         #
+
+            addi        $a0, $t6, 0         # restore n
+        # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+        # check destination peg ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+            beq         $a2, $t4, toB       # if dest peg is 2 (B)
+            beq         $a2, $t5, toC       # if dest peg is 3 (C)
+# -----------------------------------------------------------
+
+# -----------------------------------------------------------
+            .text
+Bto:
+        # moving from peg B to peg... ~~~~~~~~~~~~~~~~~~~~~~~~
+            addi        $t6, $a0, 0         # temp hold n while printing
+
+            li          $v0, 4              #
+            la          $a0, letterB        # print B
+            syscall                         #
+
+            li          $v0, 4              #
+            la          $a0, to             # print to
+            syscall                         #
+
+            addi        $a0, $t6, 0         # restore n
+        # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+        # check destination peg ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+            beq         $a2, $t3, toA       # if dest peg is 1 (A)
+            beq         $a2, $t5, toC       # if dest peg is 3 (C)
+# -----------------------------------------------------------
+
+# -----------------------------------------------------------
+            .text
+Cto:
+        # moving from peg C to peg... ~~~~~~~~~~~~~~~~~~~~~~~~
+            addi        $t6, $a0, 0         # temp hold n while printing
+
+            li          $v0, 4              #
+            la          $a0, letterC        # print C
+            syscall                         #
+
+            li          $v0, 4              #
+            la          $a0, to             # print to
+            syscall                         #
+
+            addi        $a0, $t6, 0         # restore n
+        # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+        # check destination peg ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+            beq         $a2, $t3, toA       # if dest peg is 1 (A)
+            beq         $a2, $t4, toB       # if dest peg is 2 (B)
+# -----------------------------------------------------------
+
+# -----------------------------------------------------------
+            .text
+toA:
+        # moving from peg... to peg A ~~~~~~~~~~~~~~~~~~~~~~~~
+            addi        $t6, $a0, 0         # temp hold n while printing
+
+            li          $v0, 4              #
+            la          $a0, letterA        # print A
+            syscall                         #
+
+            li          $v0, 4              #
+            la          $a0, endl           # print endline char
+            syscall                         #
+
+            addi        $a0, $t6, 0         # restore n
+        # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+        # reorder pegs ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+            j         moveDisk2             # jump to second recursion
+# -----------------------------------------------------------
+
+# -----------------------------------------------------------
+            .text
+toB:
+        # moving from peg... to peg B ~~~~~~~~~~~~~~~~~~~~~~~~
+            addi        $t6, $a0, 0         # temp hold n while printing
+
+            li          $v0, 4              #
+            la          $a0, letterB        # print B
+            syscall                         #
+
+            li          $v0, 4              #
+            la          $a0, endl           # print endline char
+            syscall                         #
+
+            addi        $a0, $t6, 0         # restore n
+        # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+        # reorder pegs ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+            j         moveDisk2             # jump to second recursion
+# -----------------------------------------------------------
+
+# -----------------------------------------------------------
+            .text
+toC:
+        # moving from peg... to peg C ~~~~~~~~~~~~~~~~~~~~~~~~
+            addi        $t6, $a0, 0         # temp hold n while printing
+
+            li          $v0, 4              #
+            la          $a0, letterC        # print C
+            syscall                         #
+
+            li          $v0, 4              #
+            la          $a0, endl           # print endline char
+            syscall                         #
+
+            addi        $a0, $t6, 0         # restore n
+        # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+        # reorder pegs ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+            j         moveDisk2             # jump to second recursion
+# -----------------------------------------------------------
+
+# -----------------------------------------------------------
+            .text
+return:
+        # return from break when n = 0
+            jr          $ra                 # return to main
+
+# -----------------------------------------------------------
+
+# -----------------------------------------------------------
+            .text
+terminator:
+    # tell user it's all over and end program
+
+            li          $v0, 4              #
+            la          $a0, endl           # print endline char
+            syscall                         #
+
+            li          $v0, 4              #
+            la          $a0, endMessage     # print ending message
+            syscall                         #
+
+            li          $v0, 1              #
+            addi        $a0, $t1, 0         # print counter
+            syscall                         #
+
+    # halt
+            li          $v0, 10             #
+            syscall                         # halt program
+# -----------------------------------------------------------

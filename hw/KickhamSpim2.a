@@ -1,0 +1,323 @@
+# Assignment SPIM 2
+# Tyler Kickham
+# Purpose: Figure out compound interest for values using floating point instructions
+# Input: User inputs float for init investment, int for years invested in, float for interest rate %, char for term
+# Output: Display of input information, compounded interest given input for each year given
+# -------------------------------------------------------------------------
+            .data
+decpoint:   .asciiz "."
+prinText:   .asciiz "Enter principal investment: "
+yearText:   .asciiz "Enter how many years investment will go: "
+intText:    .asciiz "Enter the interest rate percentage: "
+termText:   .asciiz "Enter term (yearly: 'y', monthly: 'm'): "
+prinDisp:   .asciiz "Principal investment: "
+yearDisp:   .asciiz "Years invested: "
+intDisp:    .asciiz "Interest rate: "
+termDisp:   .asciiz "Compound term (0 - year, 1 - month): "
+amtDisp:    .asciiz "Compounded value: "
+endMessage: .asciiz "Program completed. Final value:\n"
+endl:       .asciiz "\n"
+# -------------------------------------------------------------------------
+            .text
+            .globl main
+
+main:
+        # $t0 = investment length, $t1 = term
+        # $t6 = holds 1, $t9 = temp to div/multiply by
+        # $f0 = principal, $f1 = interest rate, $f2 temp to mult/div by
+        # $f3 = length, $f4 = term, $f6 = $t9, $f7 = PVx$f6, $f10 = original val
+
+            jal         inputFunction
+
+            # move return ints to temp registers
+            add         $t0, $v0, $zero     # move length to $t0
+            add         $t8, $t0, $zero     # store years in a counter
+            add         $t1, $v1, $zero     # move term to $t1
+
+            li          $t6, 1              # store 1 for loops
+            li          $t9, 100            # temp hold 100 to convert to single
+            mtc1        $t9, $f2            # convert $t9 to float
+            cvt.s.w     $f2, $f2            # make a single float
+
+        # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+            # print input
+            li          $v0, 4              #
+            la          $a0, endl           # print endl char
+            syscall                         #
+
+            li          $v0, 4              #
+            la          $a0, prinDisp       # print prinDisp
+            syscall                         #
+
+            li          $v0, 1              #
+            mul.s       $f0, $f0, $f2       # start getting principal to 2 decimal
+            trunc.w.s   $f0, $f0            # truncate principal to word
+            mfc1        $s1, $f0            # move to int register
+            div         $s1, $t9            # divide by 100 to seperate left from right dec
+            mflo        $t9                 # move left side to $t9
+            mfhi        $s1                 # move right side to $s1
+            move        $a0, $t9            # print left side
+            syscall                         #
+
+            li          $v0, 4              #
+            la          $a0, decpoint       # print decimal point
+            syscall                         #
+
+            li          $v0, 1              #
+            move        $a0, $s1            # print right side
+            syscall                         #
+
+            cvt.s.w     $f0, $f0            # convert it back to float
+            div.s       $f0, $f0, $f2       # get it back to the right number
+
+            li          $v0, 4              #
+            la          $a0, endl           # print endl char
+            syscall                         #
+
+            li          $v0, 4              #
+            la          $a0, yearDisp       # print yearDisp
+            syscall                         #
+
+            li          $v0, 1              #
+            move        $a0, $t0            # print length of investment
+            syscall                         #
+
+            li          $v0, 4              #
+            la          $a0, endl           # print endl char
+            syscall                         #
+
+            li          $v0, 4              #
+            la          $a0, intDisp        # print intDisp
+            syscall                         #
+
+            li          $t9, 100            # temp hold 100 to convert to single
+
+            li          $v0, 1              #
+            mul.s       $f1, $f1, $f2       # start getting interest to 2 decimal
+            trunc.w.s   $f1, $f1            # truncate interest to word
+            mfc1        $s1, $f1            # move to int register
+            div         $s1, $t9            # divide by 100 to seperate left from right dec
+            mflo        $t9                 # move left side to $t9
+            mfhi        $s1                 # move right side to $s1
+            move        $a0, $t9            # print left side
+            syscall                         #
+
+            li          $v0, 4              #
+            la          $a0, decpoint       # print decimal point
+            syscall                         #
+
+            li          $v0, 1              #
+            move        $a0, $s1            # print right side
+            syscall                         #
+
+            cvt.s.w     $f1, $f1            # convert it back to float
+            div.s       $f1, $f1, $f2       # get it back to the right number
+
+            li          $v0, 4              #
+            la          $a0, endl           # print endl char
+            syscall                         #
+
+            li          $v0, 4              #
+            la          $a0, termDisp       # print termDisp
+            syscall                         #
+
+            li          $v0, 1              #
+            add         $a0, $t1, $zero     # print term value (1 = month 0 = year)
+            syscall                         #
+        # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+            mtc1        $t0, $f3            #
+            cvt.s.w     $f3, $f3            # convert length to float
+            mtc1        $t1, $f4            #
+            cvt.s.w     $f4, $f4            # convert term to float
+            # f7 = product, $f1 = t3
+
+            # find value of n (n = (m*11)+1)
+            li          $t9, 11             # temp hold 100 to convert to single
+            mtc1        $t9, $f6            # convert $t9 to float
+            cvt.s.w     $f6, $f6            # make a single float
+            mul.s       $f7, $f6, $f4       # multiply by 0 or 1 to get 0 or 11
+
+            li          $t9, 1              # temp hold 100 to convert to single
+            mtc1        $t9, $f6            # convert $t9 to float
+            cvt.s.w     $f6, $f6            # make a single float
+            add.s       $f7, $f7, $f6       # add 1 to product
+
+            # find (1+r/n)^(t*n) -- t*n = 1*n = n
+            div.s       $f1, $f1, $f2       # divide rate by 100
+            div.s       $f1, $f1, $f7       # r/n
+            add.s       $f1, $f1, $f6       # add 1 to r/n
+            
+            cvt.w.s     $f7, $f7            # make float an int
+            mfc1        $s1, $f7            # make interest rate an int
+            sub         $s1, $s1, 1         # subtract 1 to count first iteration of it too
+
+            li          $t9, 0              # temp hold 100 to convert to single
+            mtc1        $t9, $f6            # convert $t9 to float
+            cvt.s.w     $f6, $f6            # make a single float
+            
+            add.s       $f10, $f1, $f6      # store original value
+
+loop:
+            beq         $s1, $zero, loop2   # found val raised to exponent
+            mul.s       $f1, $f1, $f10      # multiply by (1+r/n)
+            sub         $s1, $s1, $t6       # subtract 1 from counter
+            j           loop                # loop again
+loop2:
+            mul.s       $f0, $f0, $f1       # multiply PV by (1+r/n)^(t*n)
+            jal         printValue          # jump to print procedure
+            sub         $t8, $t8, $t6       # subtract 1 year
+            bgtz        $t8, loop2          # loop while still years left
+            
+            # no more loops print final value second time
+            add         $a0, $t7, $zero     # move final value into argument
+
+            jal         terminator
+# -----------------------------------------------------------
+
+# -----------------------------------------------------------
+            .text
+inputFunction:
+    # receives user input for principal, length of investment, interest rate, term
+    # return principal/rate in f0, f1    length/term in v0, v1
+        # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+        # make storage space for frame by conventions
+            subu        $sp, $sp, 32        # move 32 bytes (size computed)
+            sw          $ra, 20($sp)        # store return address to main
+            sw          $fp, 16($sp)        # store frame pointer from main
+            addu        $fp, $sp, 28        # reset frame pointer to current frame
+                                            # no arguments to save
+        # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+        # principal investment (float)
+            li          $v0, 4              #
+            la          $a0, prinText       # ask for principal investment
+            syscall                         #
+
+            li          $v0, 6              #
+            syscall                         # read principal invest float
+
+            mov.s       $f1, $f0            # move principal to retain when getting new input
+        # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+        # investment length (int)
+            li          $v0, 4              #
+            la          $a0, yearText       # ask for length of investment
+            syscall                         #
+
+            li          $v0, 5              #
+            syscall                         # read length of investment
+
+            add         $v1, $v0, $zero     # move length to retain when getting new input
+        # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+        # interest rate (float)
+            addi        $t2, $t2, 4         # move to next index
+
+            li          $v0, 4              #
+            la          $a0, intText        # ask for interest rate
+            syscall                         #
+
+            li          $v0, 6              #
+            syscall                         # read interest rate float
+
+            mov.s       $f2, $f0            # move interest to return in right order
+        # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+        # compound term (int)
+            li          $v0, 4              #
+            la          $a0, termText       # ask for term
+            syscall                         #
+
+            li          $v0, 12             #
+            syscall                         # read term char
+
+            slti        $v0, $v0, 110       # if the ascii code is under 110 (must be m) $t3=1
+
+            add         $t0, $v0, $zero     # move interest to return in right order
+        # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+        # return to main
+            mov.s       $f0, $f1            #
+            mov.s       $f1, $f2            # reorder fp to return correctly
+
+            add         $v0, $v1, $zero     #
+            add         $v1, $t0, $zero     # reorder ints to return correctly
+
+            lw          $ra, 20($sp)        # restore return address to main
+            lw          $fp, 16($sp)        # restore frame pointer to main
+            addu        $sp, $sp, 32        # move sp back to original location
+            jr          $ra                 # return to main
+# -----------------------------------------------------------
+
+# -----------------------------------------------------------
+            .text
+printValue:
+    # receives future value to print in f0, returns nothing
+    # $t9 = amount to divide by/left side of decimal, $s1 = PV*100 / right side
+    # $f2 = 100, $f6 = argument passed in
+        # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+        # make storage space for frame by conventions
+            subu        $sp, $sp, 32        # move 32 bytes (size computed)
+            sw          $ra, 20($sp)        # store return address to main
+            sw          $fp, 16($sp)        # store frame pointer from main
+            addu        $fp, $sp, 28        # reset frame pointer to current frame
+            sw          $v0, -4($fp)        # save PV argument to new procedure
+        # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+            mov.s       $f6, $f0            # move argument to $f6
+            li          $v0, 4              #
+            la          $a0, endl           # print endl char
+            syscall                         #
+
+            li          $v0, 4              #
+            la          $a0, amtDisp        # print amtDisp
+            syscall                         #
+
+            li          $t9, 100            # temp hold 100 to convert to single
+
+            li          $v0, 1              #
+            mul.s       $f6, $f6, $f2       # start getting compounded value to 2 decimal
+            trunc.w.s   $f6, $f6            # truncate compounded value to word
+            mfc1        $s1, $f6            # move to int register
+            div         $s1, $t9            # divide by 100 to seperate left from right dec
+            mflo        $t9                 # move left side to $t9
+            mfhi        $s1                 # move right side to $s1
+            move        $a0, $t9            # print left side
+            syscall                         #
+
+            li          $v0, 4              #
+            la          $a0, decpoint       # print decimal point
+            syscall                         #
+
+            li          $v0, 1              #
+            move        $a0, $s1            # print right side
+            syscall                         #
+
+            cvt.s.w     $f6, $f6            # convert it back to float
+            div.s       $f6, $f6, $f2       # get it back to the right number
+
+            # return to call
+            lw          $ra, 20($sp)        # restore return address to main
+            lw          $fp, 16($sp)        # restore frame pointer to main
+            addu        $sp, $sp, 32        # move sp back to original location
+
+            jr          $ra                 # return to call
+# -----------------------------------------------------------
+
+# -----------------------------------------------------------
+            .text
+terminator:
+    # tell user it's all over
+            mov.s       $f6, $f0            # temp store final value in $a1
+
+            li          $v0, 4
+            la          $a0, endl
+            syscall
+
+            li          $v0, 4
+            la          $a0, endMessage
+            syscall
+
+            mov.s       $f0, $f6            # move final value to argument
+
+            jal         printValue          # print final value second time
+
+    # halt
+            li          $v0, 10
+            syscall
+# -----------------------------------------------------------

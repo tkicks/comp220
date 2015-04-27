@@ -1,0 +1,82 @@
+# -------------------------------------------------------------------------
+            .data
+divideBy:   .float      3.0
+sAvg:       .float      0.0
+dAvg:       .double     0.00
+input:      .double     0.00
+enterText:  .asciiz     "Enter 3 fp: "
+sAvgText:   .asciiz     "Single average: "
+dAvgText:   .asciiz     "Double average: "
+endl:       .asciiz     "\n"
+# -------------------------------------------------------------------------
+            .text
+            .globl main
+main:
+            l.s     $f2, sAvg           # single avg
+            l.d     $f4, dAvg           # double avg
+            l.s     $f6, divideBy       # divide by 3
+            l.s     $f8, input          # temp for doubling input
+
+            li      $v0, 4              #
+            la      $a0, enterText      # print enterText
+            syscall                     #
+
+            li      $v0, 6              #
+            syscall                     # read fp number
+
+            add.s   $f2, $f2, $f0       # add to single avg
+
+            cvt.d.s $f8, $f0            # convert input to double
+            add.d   $f4, $f4, $f8       # add double to double avg
+
+            li      $v0, 6              #
+            syscall                     # read fp number
+
+            add.s   $f2, $f2, $f0       # add to single avg
+
+            cvt.d.s $f8, $f0            # convert input to double
+            add.d   $f4, $f4, $f8       # add double to double avg
+
+            li      $v0, 6              #
+            syscall                     # read fp number
+
+            add.s   $f2, $f2, $f0       # add to single avg
+
+            cvt.d.s $f8, $f0            # convert input to double
+            add.d   $f4, $f4, $f8       # add double to double avg
+
+            div.s   $f2, $f2, $f6       # divide by 3
+
+            cvt.d.s $f6, $f6            # convert 3.0 to double
+            div.d   $f4, $f4, $f6       # divide for avg
+
+            li      $v0, 4              #
+            la      $a0, endl           # print endl char
+            syscall                     #
+
+            li      $v0, 4              #
+            la      $a0, sAvgText       # print single avg text
+            syscall                     #
+
+            li      $v0, 2              #
+            mov.s   $f12, $f2           # print single avg
+            syscall                     #
+
+            li      $v0, 4              #
+            la      $a0, endl           # print endl char
+            syscall                     #
+
+            li      $v0, 4              #
+            la      $a0, dAvgText       # print double avg text
+            syscall                     #
+
+            li      $v0, 3              #
+            mov.d   $f12, $f4           # print double avg
+            syscall                     #
+
+            li      $v0, 4              #
+            la      $a0, endl           # print endl char
+            syscall                     #
+
+            li      $v0, 10             #
+            syscall                     # halt

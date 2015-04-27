@@ -1,0 +1,65 @@
+# -------------------------------------------------------------------------
+            .data
+enterText:  .asciiz     "Enter 3 fp: "
+sAvgText:   .asciiz     "Single average: "
+dAvgText:   .asciiz     "Double average: "
+endl:       .asciiz     "\n"
+# -------------------------------------------------------------------------
+            .text
+            .globl main
+main:
+            li      $f0, 0              #
+            li      $f1, 0              # registers for user input
+            li      $f2, 0              #
+
+            li      $f3, 0              # single avg
+            li      $f4, 0              # double avg
+
+            li      $v0, 4              #
+            la      $a0, enterText      # print enterText
+            syscall                     #
+
+            l.s     $v0, 6              #
+            syscall                     # read fp number
+
+            add.s   $f3, $f3, $v0       # add to single avg
+            add.d   $f4, $f4, $v0       # add to double avg
+
+            li      $v0, 4              #
+            la      $a0, endl           # print endl char
+            syscall                     #
+
+            l.s     $v0, 6              #
+            syscall                     # read fp number
+
+            add.s   $f3, $f3, $v0       # add to single avg
+            add.d   $f4, $f4, $v0       # add to double avg
+
+            li      $v0, 4              #
+            la      $a0, endl           # print endl char
+            syscall                     #
+
+            l.s     $v0, 6              #
+            syscall                     # read fp number
+
+            add.s   $f3, $f3, $v0       # add to single avg
+            add.d   $f4, $f4, $v0       # add to double avg
+
+            li      $v0, 4              #
+            la      $a0, endl           # print endl char
+            syscall                     #
+
+            li      $v0, 2              #
+            l.s     $f12, $f3           # print single avg
+            syscall                     #
+
+            li      $v0, 4              #
+            la      $a0, endl           # print endl char
+            syscall                     #
+
+            li      $v0, 2              #
+            l.s     $f12, $f4           # print double avg
+            syscall                     #
+
+            li      $v0, 10             #
+            syscall                     # halt
